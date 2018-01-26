@@ -10,12 +10,17 @@ function makeGraphs(error, salaryData) {
     })
     
     show_discipline_selector(ndx);
+    
+    show_percent_that_are_professors(ndx, "Female", "#percent-of-women-professors");
+    show_percent_that_are_professors(ndx, "Male", "#percent-of-men-professors");
+    
     show_gender_balance(ndx);
     show_average_salary(ndx);
     show_rank_distribution(ndx);
     
     dc.renderAll();
 }
+
 
 function show_discipline_selector(ndx) {
     var dim = ndx.dimension(dc.pluck('discipline'));
@@ -25,6 +30,46 @@ function show_discipline_selector(ndx) {
         .dimension(dim)
         .group(group);
 }
+
+
+function show_percent_that_are_professors(ndx, gender, element) {
+    var percentageThatAreProf = ndx.groupAll().reduce(
+        function(p, v) {
+            if (v.sex === gender) {
+                p.count++;
+                if(v.rank === "Prof") {
+                    p.are_prof++;
+                }
+            }
+            return p;
+        },
+        function(p, v) {
+            if (v.sex === gender) {
+                p.count--;
+                if(v.rank === "Prof") {
+                    p.are_prof--;
+                }
+            }
+            return p;
+        },
+        function() {
+            return {count: 0, are_prof: 0};    
+        },
+    );
+    
+    dc.numberDisplay(element)
+        .formatNumber(d3.format(".2%"))
+        .valueAccessor(function (d) {
+            if (d.count == 0) {
+                return 0;
+            } else {
+                return (d.are_prof / d.count);
+            }
+        })
+        .group(percentageThatAreProf)
+}
+
+
 
 
 function show_gender_balance(ndx) {
